@@ -8,7 +8,9 @@ const {
   MessageFlags,
 } = require("discord.js");
 const { BOT_TOKEN } = require("./config.json");
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+});
 
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, "commands");
@@ -32,8 +34,17 @@ for (const folder of commandFolders) {
   }
 }
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+client.once(Events.ClientReady, async () => {
+  console.log(`Ready! Logged in as ${client.user.tag}`);
+
+  const commands = client.commands.map((command) => command.data.toJSON());
+
+  try {
+    await client.application.commands.set(commands);
+    console.log("Команды успешно зарегистрированы!");
+  } catch (error) {
+    console.error("Ошибка при регистрации команд:", error);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
